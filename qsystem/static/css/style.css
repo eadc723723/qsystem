@@ -1,0 +1,132 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #ffffff;
+}
+
+.queue-display {
+  width: 80%;
+  margin: 40px auto;
+  background-color: transparent;
+}
+
+.title {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+#start-button {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 20px;
+  font-size: 50px;
+  border: none;
+  margin-top: 20rem;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #66bb6a, #43a047);
+  color: #fff;
+  cursor: pointer;
+}
+
+#start-button:hover {
+  background-color: #3e8e41;
+}
+
+#queue-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#queue-list li {
+  padding-top: 3rem;
+  font-size: 24px;
+  margin-bottom: 10rem; /* Adds spacing between list items */
+}
+
+#queue-list li:last-child {
+  border-bottom: none;
+}
+
+#queue-list li.recalled {
+  color: #666;
+}
+
+.queue-number {
+  font-weight: bold; /* Makes the font bold */
+  font-size: 11.5rem; /* Adjusts the font size */
+  color: #454343;
+  -webkit-background-clip: text; /* Applies gradient to text in WebKit-based browsers */
+  background-clip: text; /* Applies gradient to text in other browsers */
+  position: absolute; /* Sets the position to allow overlap */
+  margin-left: 130px; /* Adds space to the left of the number */
+  letter-spacing: 1px; /* Adjusts the spacing between letters */
+  text-transform: uppercase; /* Transforms text to uppercase */
+  font-family: "Arial", sans-serif; /* Sets the font family */
+  padding-right: 80px;
+  padding-left: 40px;
+  margin-top: -70px; /* Moves text upwards */
+  z-index: 1; /* Ensures it stays on top */
+  /* text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); Adds a normal shadow effect */
+}
+
+.queue-counter {
+  font-weight: bold; /* Makes the font bold */
+  font-size: 6.5rem; /* Adjusts the font size */
+  color: #454343; /* Sets the text color */
+  background: linear-gradient(180deg, #ffffff, #ffffff, #9337f5);
+  letter-spacing: 1px; /* Adjusts the spacing between letters */
+  text-transform: uppercase; /* Transforms text to uppercase */
+  font-family: "Arial", sans-serif; /* Sets the font family */
+  padding: 0rem;
+  padding-right: 5rem;
+  padding-left: 10rem;
+  border-radius: 0px 80px 60px 60px;
+  position: absolute; /* Changes position to absolute to control width and alignment */
+  left: 3.5rem; /* Aligns the left edge of .queue-counter to the container */
+  width: calc(100% - 400px); /* Extends background to the start of .queue-number, accounting for margin */
+  text-align: right;
+  z-index: 0; /* Ensures it stays below the queue number */
+}
+
+.highlight {
+  animation: highlightAnimation 4s ease-in-out;
+}
+
+@keyframes highlightAnimation {
+  0% {
+    color: #333; /* Ensure text color is visible */
+    text-shadow: 0 0 10px rgba(255, 255, 0, 3); /* Glowing effect */
+    z-index: 2; /* Ensure it is above other elements */
+  }
+  100% {
+    background-color: transparent; /* Revert to transparent background */
+    color: #333; /* Revert to default text color */
+    text-shadow: none; /* Remove shadow */
+  }
+}
+
+/* Add some media queries to make it look good on a 50 inch TV */
+@media only screen and (min-width: 1200px) {
+  .queue-display {
+    width: 100%;
+  }
+  .title {
+    font-size: 48px;
+  }
+  #queue-list li {
+    font-size: 58px;
+  }
+}
+
+@media only screen and (min-width: 1800px) {
+  .queue-display {
+    width: 100%;
+  }
+  .title {
+    font-size: 60px;
+  }
+  #queue-list li {
+    font-size: 58px;
+  }
+}

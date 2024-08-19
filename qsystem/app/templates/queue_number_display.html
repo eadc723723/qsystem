@@ -1,0 +1,9 @@
+{% extends "base_public.html" %} {%load static%}{% block title %}Queue Number{% endblock %} {% block header %}<img src="{% static 'png/icon-192x192.png' %}" alt="Header Icon" style="vertical-align: middle; height: 50px" /> Queue Ticket{% endblock %} {% block content %}
+<div class="container">
+  <div class="box has-text-centered">
+    <p class="title">Your queue number</p>
+    <p class="title is-1">{{ queue_number.number }}</p>
+    <p class="subtitle">For the activity: {{ queue_number.activity.name }}</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base_public.html" %} {%load static%}{% block title %}Select Activity{% endblock %} {% block header %}<img src="{% static 'png/icon-192x192.png' %}" alt="Header Icon" style="vertical-align: middle; height: 50px" /> Queue Ticket{% endblock %} {% block content %}
+<div class="activities-wrapper">
+  <div class="columns is-multiline">
+    {% for item in activities_with_status %}
+    <div class="column is-one-quarter" id="activity-{{ item.activity.id }}">
+      <div class="box has-text-centered">
+        <p>
+          <span id="counter-name-{{ item.activity.id }}">{{ item.counter_name }}</span>
+          <span id="counter-status-{{ item.activity.id }}" class="tag is-warning is-light is-medium"> {{ item.counter_status|capfirst }} </span>
+        </p>
+        <div style="padding-top: 10px">
+          <a class="button is-primary is-large is-fullwidth" href="{% url 'queue_number' item.activity.id %}">{{ item.activity.name }}</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="column">
+      <div class="box has-text-centered">
+        <p>No activities available.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %} {% block title %}Staff Sign-In{% endblock %} {% block header %}Staff Sign-In{% endblock %} {% block content %}
+<section class="section">
+        <div class="container">
+            <h1 class="title">Staff Sign In</h1>
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="field">
+                    <label class="label">{{ form.counter.label }}</label>
+                    <div class="control">
+                        <select name="{{ form.counter.name }}" id="{{ form.counter.id_for_label }}" class="input">
+                            {% for choice in form.counter.field.queryset %}
+                                <option value="{{ choice.pk }}" {% if choice.pk == form.counter.value %}selected{% endif %}>{{ choice }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.counter.errors %}
+                            <p class="help is-danger">{{ form.counter.errors }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">{{ form.activity.label }}</label>
+                    <div class="control">
+                        <select name="{{ form.activity.name }}" id="{{ form.activity.id_for_label }}" class="input">
+                            {% for choice in form.activity.field.queryset %}
+                                <option value="{{ choice.pk }}" {% if choice.pk == form.activity.value %}selected{% endif %}>{{ choice }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.activity.errors %}
+                            <p class="help is-danger">{{ form.activity.errors }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button type="submit" class="button is-primary">Sign In</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}

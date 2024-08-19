@@ -1,0 +1,168 @@
+{% extends "base.html" %} {% block title %}Staff Dashboard{% endblock %} {% block content %}
+<div class="container">
+  <h1 class="title">Current Counter: {{ counter.name }}<span class="tag is-warning is-light is-medium">{{ activity.name }}</span></h1>
+  <!-- Issued Queue Numbers -->
+  <div class="box">
+    <h2 class="subtitle">Issued Queue Numbers</h2>
+    <table class="table is-fullwidth">
+      <thead>
+        <tr>
+          <th>Queue Number</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="issued-queue-table-body">
+        {% for queue_number in issued_queue_numbers %}
+        <tr data-id="{{ queue_number.id }}">
+          <td>{{ queue_number.number }}</td>
+          <td class="status">{{ queue_number.get_status_display }}</td>
+          <td>
+            {% if queue_number.status == 'issued' %}
+            <button class="button is-info call-btn" data-id="{{ queue_number.id }}">Call</button>
+            <button class="button is-danger cancel-btn" data-id="{{ queue_number.id }}">Cancel</button>
+            {% else %}
+            <button class="button is-info call-btn" data-id="{{ queue_number.id }}" disabled>Call</button>
+            <button class="button is-danger cancel-btn" data-id="{{ queue_number.id }}" disabled>Cancel</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3">No queue numbers to display.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Called Queue Numbers -->
+  <div class="box">
+    <h2 class="subtitle">Called Queue Numbers</h2>
+    <table class="table is-fullwidth">
+      <thead>
+        <tr>
+          <th>Queue Number</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="called-queue-table-body">
+        {% for queue_number in called_queue_numbers %}
+        <tr data-id="{{ queue_number.id }}">
+          <td>{{ queue_number.number }}</td>
+          <td class="status">{{ queue_number.get_status_display }}</td>
+          <td>
+            <button class="button is-warning recall-btn" data-id="{{ queue_number.id }}">Reinforce Call</button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3">No called queue numbers to display.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const issuedTableBody = document.getElementById("issued-queue-table-body");
+      const calledTableBody = document.getElementById("called-queue-table-body");
+
+      function fetchQueueInfo() {
+        fetch("{% url 'reinforce_called_numbers' %}")
+          .then((response) => response.json())
+          .then((data) => {
+            updateQueueTable(issuedTableBody, data.issued_queue_numbers);
+            updateQueueTable(calledTableBody, data.called_queue_numbers);
+          })
+          .catch((error) => console.error("Error fetching queue info:", error));
+      }
+
+      function createButton(buttonClass, buttonText, queueNumberId, isDisabled) {
+        const button = document.createElement("button");
+        button.className = `button ${buttonClass}`;
+        button.textContent = buttonText;
+        button.dataset.id = queueNumberId;
+        if (isDisabled) {
+          button.disabled = true;
+        }
+        return button;
+      }
+
+      function updateQueueTable(tableBody, queueNumbers) {
+        tableBody.innerHTML = "";
+        queueNumbers.forEach((queueNumber) => {
+          const row = document.createElement("tr");
+          row.dataset.id = queueNumber.id;
+
+          const numberCell = document.createElement("td");
+          numberCell.textContent = queueNumber.number;
+          row.appendChild(numberCell);
+
+          const statusCell = document.createElement("td");
+          statusCell.className = "status";
+          statusCell.textContent = queueNumber.status; // Ensure this is the correct status
+          row.appendChild(statusCell);
+
+          const actionsCell = document.createElement("td");
+          if (tableBody.id === "issued-queue-table-body") {
+            actionsCell.appendChild(createButton("is-info call-btn", "Call", queueNumber.id, queueNumber.status !== "issued"));
+            actionsCell.appendChild(createButton("is-danger cancel-btn", "Cancel", queueNumber.id, queueNumber.status !== "issued"));
+          } else {
+            actionsCell.appendChild(createButton("is-warning recall-btn", "Reinforce Call", queueNumber.id, false));
+          }
+
+          row.appendChild(actionsCell);
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Set interval to poll the server every 5 seconds
+      setInterval(fetchQueueInfo, 5000);
+
+      // Event listener for buttons
+      document.body.addEventListener("click", function (event) {
+        if (event.target.classList.contains("call-btn") || event.target.classList.contains("serve-btn") || event.target.classList.contains("cancel-btn") || event.target.classList.contains("recall-btn")) {
+          const button = event.target;
+          const action = button.classList.contains("call-btn") ? "call" : button.classList.contains("serve-btn") ? "serve" : button.classList.contains("cancel-btn") ? "cancel" : button.classList.contains("recall-btn") ? "recall" : "";
+          const queueNumberId = button.getAttribute("data-id");
+
+          if (action) {
+            fetch('{% url "update_queue_status" %}', {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+              },
+              body: JSON.stringify({ action: action, queue_number_id: queueNumberId }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  fetchQueueInfo(); // Refresh the tables after status update
+                } else {
+                  console.error("Failed to update queue status");
+                }
+              })
+              .catch((error) => console.error("Error updating queue status:", error));
+          }
+        }
+      });
+      window.addEventListener("beforeunload", function (event) {
+        // Send AJAX request to sign out the staff
+        fetch("{% url 'ajax_sign_out' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        });
+      });
+    });
+  </script>
+
+  {% endblock %}
+</div>

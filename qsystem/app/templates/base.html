@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}My Application{% endblock %}</title>
+    <!-- Include Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    <!-- Include any additional stylesheets -->
+    {% block extra_styles %}{% endblock %}
+    <style>
+      html,
+      body {
+        height: 50%;
+        margin: 0;
+      }
+      .page-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 50vh;
+      }
+      .content {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrapper">
+      <header class="section">
+        <h1 class="title">{% block header %}Welcome{% endblock %}</h1>
+        {% if user.is_authenticated %}
+        <nav class="navbar">
+          <div class="navbar-menu">
+            <div class="navbar-start">
+              <!-- Other navigation items -->
+              <a href="{% url 'sign_out_and_log_out' %}" class="button is-danger is-light">Log Out</a>
+            </div>
+          </div>
+        </nav>
+        {% else %}
+        <nav class="navbar">
+          <div class="navbar-menu">
+            <div class="navbar-start">
+              <!-- Navigation items for non-authenticated users -->
+              <a class="navbar-item button is-link" href="{% url 'login' %}">Login</a>
+            </div>
+          </div>
+        </nav>
+        {% endif %}
+      </header>
+      <main class="content">{% block content %}{% endblock %}</main>
+      <footer class="section">
+        <p class="has-text-centered">&copy; 2024 ADC</p>
+      </footer>
+    </div>
+  </body>
+</html>

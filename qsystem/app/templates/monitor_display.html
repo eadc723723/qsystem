@@ -1,0 +1,216 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Queue Display</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  </head>
+  <body>
+    <div class="queue-display">
+      <button id="start-button" class="button is-primary">Start Queue Display</button>
+      <ul id="queue-list">
+        <!-- Queue numbers will be dynamically inserted here -->
+      </ul>
+    </div>
+
+    <script>
+      let displayedQueueNumbers = JSON.parse(localStorage.getItem("displayedQueueNumbers")) || [];
+      let isInitialized = false;
+      let fetchInterval;
+      const startButton = document.getElementById("start-button");
+
+      const audioFiles = {};
+      const audioPaths = {
+        tone: "/static/audio/tone.mp3",
+        counter: "/static/audio/counter.mp3",
+        digits: Array.from({ length: 10 }, (_, i) => `/static/audio/${i}.mp3`),
+      };
+
+      // Preload audio files
+      Object.keys(audioPaths).forEach((key) => {
+        if (Array.isArray(audioPaths[key])) {
+          audioFiles[key] = audioPaths[key].map((path, index) => {
+            console.log(`Loading audio file for digit ${index}: ${path}`); // Add this line to log each file being loaded
+            const audio = new Audio(path);
+            audio.preload = "auto";
+            audio.onerror = () => console.error(`Error loading audio file: ${path}`);
+            return audio;
+          });
+        } else {
+          console.log(`Loading audio file: ${audioPaths[key]}`); // Log this line for the tone and counter
+          audioFiles[key] = new Audio(audioPaths[key]);
+          audioFiles[key].preload = "auto";
+          audioFiles[key].onerror = () => console.error(`Error loading audio file: ${audioPaths[key]}`);
+        }
+      });
+
+      // Function to play a digit's audio
+      const playDigit = (digit) => {
+        const audio = audioFiles.digits[digit];
+        if (audio) {
+          console.log(`Playing audio for digit ${digit}`); // Log this to confirm the correct file is being played
+          audio.play().catch(console.error);
+        } else {
+          console.error(`Audio file for digit ${digit} is not loaded.`); // This is the error you're seeing
+        }
+      };
+
+      function saveQueueOrder() {
+        localStorage.setItem("displayedQueueNumbers", JSON.stringify(displayedQueueNumbers));
+      }
+
+      function restoreQueueOrder() {
+        const queueList = document.getElementById("queue-list");
+
+        displayedQueueNumbers.forEach((queueInfo) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = `Queue Number: ${queueInfo.number}, Counter: ${queueInfo.counter}`;
+          if (queueInfo.is_recalled) {
+            listItem.classList.add("recalled");
+          }
+          listItem.dataset.queueNumber = queueInfo.number;
+          queueList.appendChild(listItem);
+        });
+      }
+
+      let lastPlayedQueueNumber = null;
+
+      function playAudioSequence(queueNumber, counterString) {
+        console.log(`Playing audio sequence for Queue Number: ${queueNumber}, Counter: ${counterString}`);
+
+        const toneAudio = audioFiles.tone;
+        const counterAudio = audioFiles.counter;
+
+        // Extract the digit from the counter string (e.g., "counter 1 (Online)" -> "1")
+        const counterNumberMatch = counterString.match(/\d+/); // Extracts the first digit from the string
+        const counterNumber = counterNumberMatch ? parseInt(counterNumberMatch[0], 10) : null;
+
+        // Split the queue number into individual digits
+        const digits = queueNumber.toString().split("").map(Number);
+
+        // Function to play queue digits one by one
+        const playQueueDigits = (index) => {
+          if (index >= digits.length) {
+            // All queue digits are played
+            playCounterAudio();
+            return;
+          }
+
+          const digitAudio = audioFiles.digits[digits[index]];
+          digitAudio.onended = () => {
+            // Play the next digit after the current one finishes
+            playQueueDigits(index + 1);
+          };
+          digitAudio.play();
+        };
+
+        // Function to play counter audio
+        const playCounterAudio = () => {
+          counterAudio.play();
+          counterAudio.onended = () => {
+            // After the counter audio finishes, play the counter digit audio
+            playCounterDigitAudio();
+          };
+        };
+
+        // Function to play the counter digit audio
+        const playCounterDigitAudio = () => {
+          if (counterNumber !== null) {
+            const counterDigitAudio = audioFiles.digits[counterNumber];
+            counterDigitAudio.play();
+            // Ensure counter digit audio does not trigger anything further
+            counterDigitAudio.onended = () => {
+              console.log(`Finished playing counter digit audio for ${counterNumber}`);
+            };
+          } else {
+            console.error("Invalid counter number:", counterString);
+          }
+        };
+
+        // Start the sequence by playing the tone
+        toneAudio.play();
+        toneAudio.onended = () => {
+          // After the tone finishes, start playing the queue digits
+          playQueueDigits(0);
+        };
+      }
+
+      function updateQueueDisplay(queueNumbers) {
+        const queueList = document.getElementById("queue-list");
+
+        queueList.innerHTML = "";
+
+        queueNumbers.forEach((queueInfo) => {
+          const listItem = document.createElement("li");
+
+          // Create separate elements for queue number and counter
+          const numberSpan = document.createElement("span");
+          numberSpan.classList.add("queue-number");
+          numberSpan.textContent = queueInfo.number;
+
+          const counterSpan = document.createElement("span");
+          counterSpan.classList.add("queue-counter");
+          counterSpan.textContent = queueInfo.counter;
+
+          // Append elements to list item
+          listItem.appendChild(numberSpan);
+          listItem.appendChild(counterSpan);
+
+          // Add class for recalled items if needed
+          if (queueInfo.is_recalled) {
+            listItem.classList.add("recalled");
+          }
+
+          listItem.dataset.queueNumber = queueInfo.number;
+          queueList.appendChild(listItem);
+        });
+
+        // Limit the number of displayed items
+        while (queueList.children.length > 4) {
+          queueList.removeChild(queueList.lastChild);
+        }
+
+        // Save the current order of queue numbers
+        displayedQueueNumbers = queueNumbers;
+        saveQueueOrder();
+
+        // Only play audio if the top queue number has changed
+        const topQueueInfo = queueNumbers.length > 0 ? queueNumbers[0] : null;
+        if (topQueueInfo && topQueueInfo.number !== lastPlayedQueueNumber) {
+          lastPlayedQueueNumber = topQueueInfo.number;
+          playAudioSequence(topQueueInfo.number, topQueueInfo.counter);
+
+          // Add highlight class to the top queue item
+          const topQueueItem = queueList.children[0];
+          topQueueItem.classList.add("highlight");
+          setTimeout(() => {
+            topQueueItem.classList.remove("highlight");
+          }, 5000); // Remove highlight class after 5 seconds
+        }
+      }
+      function fetchQueueNumbers() {
+        fetch("/get_current_queue_info/")
+          .then((response) => response.json())
+          .then((data) => {
+            const queueNumbers = data.queue_numbers;
+            const recalledQueueNumbers = queueNumbers.filter((queue) => queue.is_recalled);
+            const otherQueueNumbers = queueNumbers.filter((queue) => !queue.is_recalled);
+            const combinedQueueNumbers = [...recalledQueueNumbers, ...otherQueueNumbers];
+            updateQueueDisplay(combinedQueueNumbers);
+          })
+          .catch((error) => console.error("Error fetching queue info:", error));
+      }
+
+      function startQueueDisplay() {
+        restoreQueueOrder();
+        fetchQueueNumbers();
+        fetchInterval = setInterval(fetchQueueNumbers, 3000);
+        startButton.style.display = "none"; // Hide the start button after interaction
+      }
+
+      startButton.addEventListener("click", startQueueDisplay);
+    </script>
+  </body>
+</html>

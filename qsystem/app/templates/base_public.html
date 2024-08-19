@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}My Application{% endblock %}</title>
+    <!-- Include Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    <!-- Include any additional stylesheets -->
+    {% block extra_styles %}{% endblock %}
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      .page-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .content {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrapper">
+      <header class="section">
+        <h1 class="title">{% block header %}Welcome{% endblock %}</h1>
+      </header>
+      <main class="content section">{% block content %}{% endblock %}</main>
+      <footer class="section">
+        <p class="has-text-centered">&copy; 2024 ADC</p>
+      </footer>
+    </div>
+  </body>
+</html>

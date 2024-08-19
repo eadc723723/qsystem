@@ -1,0 +1,18 @@
+{% extends "base.html" %} {% block title %}Login{% endblock %} {% block content %}
+<div class="hero is-fullheight">
+  <div>
+    <div class="container has-text-centered">
+      <form method="post" class="box">
+        {% csrf_token %}
+        <div class="field">
+          <label class="label" for="{{ form.username.id_for_label }}">Select User</label>
+          <div class="control">
+            <div class="select is-primary">{{ form.username }}</div>
+          </div>
+        </div>
+        <button type="submit" class="button is-primary is-light">Login</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
