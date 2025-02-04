@@ -19,6 +19,12 @@ class StaffSignInForm(forms.Form):
         counter = cleaned_data.get('counter')
         activity = cleaned_data.get('activity')
 
+        # Check if the counter is online and if the last assignment is from a previous day
+        last_assignment = CounterActivityAssignment.objects.filter(counter=counter).order_by('-date').first()
+        if counter.status == 'online' and last_assignment and last_assignment.date < timezone.now().date():
+            counter.status = 'offline'  # Reset the counter status
+            counter.save()
+
         # Check if the counter is already assigned to the activity for today
         if CounterActivityAssignment.objects.filter(counter=counter, activity=activity, date=timezone.now().date()).exists():
             raise forms.ValidationError('This counter is already assigned to this activity today.')

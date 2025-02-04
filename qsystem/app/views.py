@@ -1,6 +1,5 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
 from .forms import UsernameAuthenticationForm
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,18 +15,18 @@ from django.db.models import Prefetch
 # select activity
 def select_activity(request):
     today = timezone.now().date()
-    
+
     # Prefetch related assignments and counters
     activities = Activity.objects.filter(mode='active').prefetch_related(
         Prefetch('counteractivityassignment_set', queryset=CounterActivityAssignment.objects.filter(date=today), to_attr='active_assignments')
     )
-    
+
     context = []
-    
+
     for activity in activities:
         # Check if there are any active assignments
         assignment = activity.active_assignments[0] if activity.active_assignments else None
-        
+
         if assignment:
             counter = assignment.counter
             context.append({
@@ -41,10 +40,9 @@ def select_activity(request):
                 'counter_name': 'N/A',
                 'counter_status': 'Offline'
             })
-    
+
     return render(request, 'select_activity.html', {'activities_with_status': context})
 
-# generate queue number
 def queue_number(request, activity_id):
     activity = get_object_or_404(Activity, id=activity_id)
     today = timezone.now().date()
@@ -56,9 +54,14 @@ def queue_number(request, activity_id):
     ).first()
 
     if not assignment:
-        return HttpResponseBadRequest("No active counter for the selected activity")
+        return render(request, 'select_activity.html', {'error_message': 'No active counter for the selected activity'})
 
     counter = assignment.counter
+
+    # Check if a queue number has already been issued in this session
+    if 'queue_number_id' in request.session:
+        queue_number = get_object_or_404(QueueNumber, id=request.session['queue_number_id'])
+        return render(request, 'queue_number_display.html', {'queue_number': queue_number, 'can_issue_new': True})
 
     # Check the latest queue number for today
     last_queue_number = QueueNumber.objects.filter(activity=activity, date=today).order_by('number').last()
@@ -72,13 +75,21 @@ def queue_number(request, activity_id):
     # Create the queue number with the assigned counter
     queue_number = QueueNumber.objects.create(activity=activity, counter=counter, number=next_number, date=today)
 
-    return redirect('queue_number_display', queue_number_id=queue_number.id)
+    # Store the issued queue number ID in the session
+    request.session['queue_number_id'] = queue_number.id
 
+    return redirect('queue_number_display', queue_number_id=queue_number.id)
 
 # queue number display
 def queue_number_display(request, queue_number_id):
     queue_number = get_object_or_404(QueueNumber, id=queue_number_id)
-    return render(request, 'queue_number_display.html', {'queue_number': queue_number})
+    return render(request, 'queue_number_display.html', {'queue_number': queue_number, 'can_issue_new': True})
+
+# Reset queue number
+def reset_queue_number(request):
+    if 'queue_number_id' in request.session:
+        del request.session['queue_number_id']  # Clear the session variable
+    return redirect('select_activity')  # Redirect to the activity selection page
 
 # staff sign-in
 @login_required
@@ -91,7 +102,7 @@ def staff_sign_in(request):
 
             # Get or create staff profile
             staff_profile, created = StaffProfile.objects.get_or_create(user=request.user)
-            
+
             # Update the counter status to 'online'
             counter.status = 'online'
             counter.save()
@@ -115,42 +126,12 @@ def staff_sign_in(request):
     return render(request, 'staff_sign_in.html', {'form': form})
 
 
-# staff sign-out
-def sign_out_and_log_out(request):
-    staff_profile = get_object_or_404(StaffProfile, user=request.user)
-
-    if staff_profile.counter:
-        # Get the assigned counter
-        counter = staff_profile.counter
-
-        # Set the counter status to 'offline'
-        counter.status = 'offline'
-        counter.save()
-
-        # Remove the counter assignment for the current date
-        CounterActivityAssignment.objects.filter(
-            counter=counter,
-            activity=staff_profile.current_activity,
-            date=timezone.now().date()
-        ).delete()
-
-    # Clear the staff profile fields
-    staff_profile.counter = None
-    staff_profile.current_activity = None
-    staff_profile.save()
-
-    # Log out the user
-    logout(request)
-
-    # Redirect to the login page
-    return redirect('login')
-
 # staff_dashboard
 @login_required(login_url='/login/')
 def staff_dashboard(request):
     # Get the staff profile
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
-    
+
     if not staff_profile.counter:
         return redirect('staff_sign_in')  # Redirect if no counter is assigned
 
@@ -251,6 +232,7 @@ def update_queue_status(request):
             data = json.loads(request.body)
             action = data.get("action")
             queue_number_id = data.get("queue_number_id")
+            counter_name = data.get("counter_name")
 
             queue_number = QueueNumber.objects.get(id=queue_number_id)
 
@@ -258,6 +240,8 @@ def update_queue_status(request):
                 if queue_number.status == "issued":
                     queue_number.status = "called"
                     queue_number.called_at = timezone.now()
+                    # Update the counter field with the counter that called the queue number
+                    queue_number.counter = Counter.objects.get(name=counter_name)
                     # Reset the is_recalled flag after fetching the queue numbers
                     QueueNumber.objects.filter(is_recalled=True).update(is_recalled=False)
             elif action == "serve":
@@ -293,7 +277,7 @@ def update_queue_status(request):
             return HttpResponseBadRequest(f"An error occurred: {str(e)}")
     else:
         return HttpResponseBadRequest("Invalid request method")
-    
+
 
 #login
 def user_login(request):
@@ -335,7 +319,7 @@ def get_current_queue_info(request):
 
     return JsonResponse({'queue_numbers': queue_info})
 
-#display monitor 
+#display monitor
 def monitor_display(request):
     now = timezone.now()
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -344,31 +328,54 @@ def monitor_display(request):
         Q(is_recalled=True),
         issued_at__gte=start_of_today
     ).order_by('-issued_at')[:4]
-    
+
     other_queue_numbers = QueueNumber.objects.filter(
         Q(is_recalled=False),
         issued_at__gte=start_of_today
     ).order_by('-issued_at')[:4 - len(recalled_queue_numbers)]
-    
+
     latest_queue_numbers = list(recalled_queue_numbers) + list(other_queue_numbers)
-    
+
     indices = list(range(len(latest_queue_numbers)))
-    
+
     return render(request, 'monitor_display.html', {
         'queue_numbers': latest_queue_numbers,
         'indices': indices
     })
 
+@login_required
+def sign_out_and_log_out(request):
+    if request.user.is_authenticated:
+        staff_profile = get_object_or_404(StaffProfile, user=request.user)
+
+        if staff_profile.counter:
+            counter = staff_profile.counter
+
+            counter.status = 'offline'
+            counter.save()
+
+            CounterActivityAssignment.objects.filter(
+                counter=counter,
+                activity=staff_profile.current_activity,
+                date=timezone.now().date()
+            ).delete()
+
+        staff_profile.counter = None
+        staff_profile.current_activity = None
+        staff_profile.save()
+
+    logout(request)
+    return redirect('login')
+
 #auto sign out if browser close
 @csrf_exempt
 def ajax_sign_out(request):
     if request.method == 'POST':
-        user = request.user
-        if user.is_authenticated:
-            staff_profile = get_object_or_404(StaffProfile, user=user)
+        if request.user.is_authenticated:
+            staff_profile = get_object_or_404(StaffProfile, user=request.user)
             if staff_profile.counter:
                 counter = staff_profile.counter
-                
+
                 # Set the counter status to 'offline'
                 counter.status = 'offline'
                 counter.save()
@@ -385,8 +392,11 @@ def ajax_sign_out(request):
             staff_profile.current_activity = None
             staff_profile.save()
 
-            # Log out the user
-            logout(request)
+            try:
+                logout(request)
+            except Exception as e:
+                print(f"Error logging out user: {e}")
+
             return JsonResponse({'status': 'success'})
-    
+
     return JsonResponse({'status': 'failed'}, status=400)

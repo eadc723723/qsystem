@@ -1,21 +1,99 @@
 {%load static%}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+    <link href="https://fonts.cdnfonts.com/css/fredoka" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/michroma-2" rel="stylesheet">
+
     <title>Queue Display</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
   </head>
   <body>
+    <header class="queue-header">
+          <img src="{% static 'png/icon-192x192.png' %}" alt="Header Icon" class="header-icon" />
+          <span class="divider"></span>
+          <span class="date"></span>
+          <span class="divider"></span>
+          <span class="digital-time"></span>
+    </header>
+
     <div class="queue-display">
-      <button id="start-button" class="button is-primary">Start Queue Display</button>
+
       <ul id="queue-list">
         <!-- Queue numbers will be dynamically inserted here -->
       </ul>
+      <button id="start-button" class="button is-primary">Start Queue Display</button>
     </div>
 
+            <ul class="circles">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+            </ul>
+
+
+    <style>
+    /* Hide scrollbar for all elements */
+* {
+  scrollbar-width: none; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+/* Hide scrollbar for the body */
+body {
+  overflow: hidden; /* Hide scrollbar */
+}
+    </style>
+
     <script>
+        function toggleScrollbarVisibility() {
+          if (document.fullscreenElement) {
+            // If in full-screen mode, hide the scrollbar
+            document.body.style.overflow = 'hidden';
+          } else {
+            // If not in full-screen mode, show the scrollbar
+            document.body.style.overflow = '';
+          }
+        }
+
+        // Listen for full-screen change events
+        document.addEventListener('fullscreenchange', toggleScrollbarVisibility);
+
+        // For vendor prefixes
+        document.addEventListener('webkitfullscreenchange', toggleScrollbarVisibility);
+        document.addEventListener('mozfullscreenchange', toggleScrollbarVisibility);
+        document.addEventListener('MSFullscreenChange', toggleScrollbarVisibility);
+
+       var dateElement = document.querySelector('.date');
+        var timeElement = document.querySelector('.digital-time');
+
+        function clock() {
+          var date = new Date();
+
+          // Set date
+          dateElement.textContent = date.toLocaleDateString('en-GB');
+
+          // Set time
+          timeElement.textContent = date.toLocaleTimeString();
+        }
+
+        // Update the clock every second
+        setInterval(clock, 1000);
+
+
       let displayedQueueNumbers = JSON.parse(localStorage.getItem("displayedQueueNumbers")) || [];
       let isInitialized = false;
       let fetchInterval;
@@ -137,12 +215,14 @@
         };
       }
 
+      let lastPlayedQueueState = null; // New variable to track the last state (called or recalled)
+
       function updateQueueDisplay(queueNumbers) {
         const queueList = document.getElementById("queue-list");
 
         queueList.innerHTML = "";
 
-        queueNumbers.forEach((queueInfo) => {
+        queueNumbers.forEach((queueInfo, index) => {
           const listItem = document.createElement("li");
 
           // Create separate elements for queue number and counter
@@ -150,17 +230,28 @@
           numberSpan.classList.add("queue-number");
           numberSpan.textContent = queueInfo.number;
 
+          const divider = document.createElement("span");
+          divider.classList.add("divider"); // Add a class for styling the divider
+
           const counterSpan = document.createElement("span");
           counterSpan.classList.add("queue-counter");
           counterSpan.textContent = queueInfo.counter;
 
           // Append elements to list item
           listItem.appendChild(numberSpan);
+          listItem.appendChild(divider);
           listItem.appendChild(counterSpan);
 
           // Add class for recalled items if needed
           if (queueInfo.is_recalled) {
             listItem.classList.add("recalled");
+          }
+
+           // Dynamically assign grid placement CSS classes
+          if (index === 0) {
+            listItem.classList.add("top-item"); // For the top row item
+          } else if (index > 0 && index <= 3) {
+            listItem.classList.add("bottom-item"); // For the bottom row items
           }
 
           listItem.dataset.queueNumber = queueInfo.number;
@@ -176,10 +267,13 @@
         displayedQueueNumbers = queueNumbers;
         saveQueueOrder();
 
-        // Only play audio if the top queue number has changed
+        // Handle audio playback for the top queue number
         const topQueueInfo = queueNumbers.length > 0 ? queueNumbers[0] : null;
-        if (topQueueInfo && topQueueInfo.number !== lastPlayedQueueNumber) {
+
+        // Check if the top queue number has changed or if its state has changed (called -> recalled)
+        if (topQueueInfo && (topQueueInfo.number !== lastPlayedQueueNumber || topQueueInfo.is_recalled !== lastPlayedQueueState)) {
           lastPlayedQueueNumber = topQueueInfo.number;
+          lastPlayedQueueState = topQueueInfo.is_recalled; // Update state tracking
           playAudioSequence(topQueueInfo.number, topQueueInfo.counter);
 
           // Add highlight class to the top queue item
@@ -190,6 +284,7 @@
           }, 5000); // Remove highlight class after 5 seconds
         }
       }
+
       function fetchQueueNumbers() {
         fetch("/get_current_queue_info/")
           .then((response) => response.json())

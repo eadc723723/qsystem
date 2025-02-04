@@ -10,6 +10,7 @@ urlpatterns = [
     path('select_activity/', views.select_activity, name='select_activity'),
     path('queue_number/<int:activity_id>/', views.queue_number, name='queue_number'),
     path('queue_number_display/<int:queue_number_id>/', views.queue_number_display, name='queue_number_display'),
+    path('queue/reset/', views.reset_queue_number, name='reset_queue_number'),
     path('staff_sign_in/', views.staff_sign_in, name='staff_sign_in'),
     path('staff_dashboard/', views.staff_dashboard, name='staff_dashboard'),
     path('reinforce_called_numbers/', views.reinforce_called_numbers, name='reinforce_called_numbers'),

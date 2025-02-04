@@ -1,132 +1,387 @@
+/* General Reset */
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #ffffff;
+  background: linear-gradient(180deg, #282828, #404040);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.queue-display {
+.circles{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.circles li{
+    position: absolute;
+    display: block;
+    list-style: none;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    animation: animate 25s linear infinite;
+    bottom: -150px;
+    
+}
+
+.circles li:nth-child(1){
+    left: 25%;
+    width: 180px;
+    height: 180px;
+    animation-delay: 0s;
+}
+
+
+.circles li:nth-child(2){
+    left: 10%;
+    width: 70px;
+    height: 70px;
+    animation-delay: 2s;
+    animation-duration: 12s;
+}
+
+.circles li:nth-child(3){
+    left: 70%;
+    width: 120px;
+    height: 120px;
+    animation-delay: 4s;
+}
+
+.circles li:nth-child(4){
+    left: 40%;
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+    animation-duration: 18s;
+}
+
+.circles li:nth-child(5){
+    left: 65%;
+    width: 50px;
+    height: 50px;
+    animation-delay: 0s;
+}
+
+.circles li:nth-child(6){
+    left: 75%;
+    width: 110px;
+    height: 110px;
+    animation-delay: 3s;
+}
+
+.circles li:nth-child(7){
+    left: 35%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 7s;
+}
+
+.circles li:nth-child(8){
+    left: 50%;
+    width: 105px;
+    height: 105px;
+    animation-delay: 15s;
+    animation-duration: 45s;
+}
+
+.circles li:nth-child(9){
+    left: 20%;
+    width: 35px;
+    height: 45px;
+    animation-delay: 2s;
+    animation-duration: 35s;
+}
+
+.circles li:nth-child(10){
+    left: 85%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 0s;
+    animation-duration: 11s;
+}
+
+
+
+@keyframes animate {
+
+    0%{
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        border-radius: 0;
+    }
+
+    100%{
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+        border-radius: 50%;
+    }
+
+}
+
+/* Header Styling */
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* Space between items */
+  padding: 20px; /* Increased padding for a taller header */
+  /* From https://css.glass */
+    background: rgba(255, 255, 255, 0.73);
+    border-radius: 64px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5.7px);
+    -webkit-backdrop-filter: blur(5.7px);
+  position: fixed; /* Fix the header at the top of the page */
+  top: 20px;
+  left: 50%;
   width: 80%;
-  margin: 40px auto;
-  background-color: transparent;
+  transform: translateX(-50%); 
+  z-index: 10; /* Ensure it's above other elements */
+  height: 150px; /* Explicit height for the header */
 }
 
-.title {
-  text-align: center;
-  font-size: 36px;
-  margin-bottom: 20px;
+
+.header-icon {
+  height: 120px;
+  width: auto;
 }
 
+.date,
+.digital-time {
+  font-size: 64px;
+  font-weight: bold;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.divider {
+  height: 50px; /* Matches the height of the content */
+  width: 2px;
+  background-color: #121212; /* Divider color */
+}
+
+/* Base Button Style */
 #start-button {
-  display: block;
-  margin: 0 auto;
-  padding: 10px 20px;
-  font-size: 50px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(145deg, #007bff, #0056b3); /* Gradient for the button */
   border: none;
-  margin-top: 20rem;
-  border-radius: 24px;
-  background: linear-gradient(145deg, #66bb6a, #43a047);
-  color: #fff;
+  border-radius: 10px;
+  padding: 15px 30px;
+  box-shadow: 0 8px #004080; /* Create the 3D effect by shadow */
+  transition: all 0.3s ease;
   cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 20px; /* Adjust margin so it aligns better */
+  z-index: 2; /* Ensure it stays above other elements */
 }
 
+/* Hover Effect */
 #start-button:hover {
-  background-color: #3e8e41;
+  transform: translateY(-3px); /* Make it pop up */
+  box-shadow: 0 12px #004080; /* Adjust shadow to emphasize the 3D effect */
 }
 
+/* Active (Pressed) Effect */
+#start-button:active {
+  transform: translateY(2px); /* Slightly sink the button */
+  box-shadow: 0 4px #004080; /* Shrink shadow to simulate a press */
+  background: linear-gradient(145deg, #0056b3, #003f7f); /* Darker gradient when pressed */
+}
+
+
+/* Queue Display Container */
+.queue-display {
+  margin-top: 160px; /* Add space to prevent the list from overlapping the header */
+  flex-grow: 1; /* Allow it to stretch and take the remaining space */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+}
+
+/* Ensure the font family is applied to both the queue number and queue counter */
+#queue-list li:nth-child(1) .queue-number,
+#queue-list li:nth-child(1) .queue-counter,
+#queue-list li:nth-child(n+2) .queue-number,
+#queue-list li:nth-child(n+2) .queue-counter {
+ font-family: 'Michroma', sans-serif;
+}
+
+/* Style for .queue-number in the first item */
+#queue-list li:nth-child(1) .queue-number {
+  color: #faf9f6;  /* Font color for queue-number */
+  z-index: 1;
+}
+
+/* Style for .queue-counter in the first item */
+#queue-list li:nth-child(1) .queue-counter {
+  color: #181818;  /* Font color for queue-counter */
+  z-index: 1;
+}
+
+/* Style for .queue-number in bottom items */
+#queue-list li:nth-child(n+2) .queue-number {
+  color: #faf9f6;  /* Font color for queue-number */
+  z-index: 1;
+}
+
+/* Style for .queue-counter in bottom items */
+#queue-list li:nth-child(n+2) .queue-counter {
+  color: #181818;  /* Font color for queue-counter */
+  z-index: 1;
+}
+
+
+/* Queue List Styling */
 #queue-list {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  grid-template-rows: 2fr 1fr; /* Top row twice the height of bottom row */
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 20px;
+  width: 80%;
+  max-width: 1600px;
   list-style: none;
   padding: 0;
   margin: 0;
+  z-index: 1; /* Ensure it's below the header */
 }
 
-#queue-list li {
-  padding-top: 3rem;
-  font-size: 24px;
-  margin-bottom: 10rem; /* Adds spacing between list items */
+/* Top row (first <li>) spans all columns */
+#queue-list li:nth-child(1) {
+  grid-column: span 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-size: 90px;
+  font-weight: bold;
+  position: relative;
+  height: 350px;
+  margin-top: 10px; /* Reduced margin-top to reduce the gap */
 }
 
-#queue-list li:last-child {
-  border-bottom: none;
+/* Use ::before to color only the left side of the card */
+#queue-list li:nth-child(1)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 50%; /* Adjust width to color only half the card */
+  background: linear-gradient(180deg, #121212, #181818);
+  border-radius: 10px 0 0 10px; /* Optional: round corners on the left side */
 }
 
-#queue-list li.recalled {
-  color: #666;
+#queue-list li:nth-child(1) .queue-number {
+   margin-left: 150px;
 }
 
-.queue-number {
-  font-weight: bold; /* Makes the font bold */
-  font-size: 11.5rem; /* Adjusts the font size */
-  color: #454343;
-  -webkit-background-clip: text; /* Applies gradient to text in WebKit-based browsers */
-  background-clip: text; /* Applies gradient to text in other browsers */
-  position: absolute; /* Sets the position to allow overlap */
-  margin-left: 130px; /* Adds space to the left of the number */
-  letter-spacing: 1px; /* Adjusts the spacing between letters */
-  text-transform: uppercase; /* Transforms text to uppercase */
-  font-family: "Arial", sans-serif; /* Sets the font family */
-  padding-right: 80px;
-  padding-left: 40px;
-  margin-top: -70px; /* Moves text upwards */
-  z-index: 1; /* Ensures it stays on top */
-  /* text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); Adds a normal shadow effect */
+#queue-list li:nth-child(1) .queue-counter {
+  /* Ensures the counter is aligned to the right */
+  margin-right: 90px;  /* This pushes the counter to the right */
 }
 
-.queue-counter {
-  font-weight: bold; /* Makes the font bold */
-  font-size: 6.5rem; /* Adjusts the font size */
-  color: #454343; /* Sets the text color */
-  background: linear-gradient(180deg, #ffffff, #ffffff, #9337f5);
-  letter-spacing: 1px; /* Adjusts the spacing between letters */
-  text-transform: uppercase; /* Transforms text to uppercase */
-  font-family: "Arial", sans-serif; /* Sets the font family */
-  padding: 0rem;
-  padding-right: 5rem;
-  padding-left: 10rem;
-  border-radius: 0px 80px 60px 60px;
-  position: absolute; /* Changes position to absolute to control width and alignment */
-  left: 3.5rem; /* Aligns the left edge of .queue-counter to the container */
-  width: calc(100% - 400px); /* Extends background to the start of .queue-number, accounting for margin */
-  text-align: right;
-  z-index: 0; /* Ensures it stays below the queue number */
+/* Divider for the first item (vertical) */
+#queue-list li:nth-child(1) .divider {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #ccc;
+  transform: translateX(-50%);
 }
 
+/* Bottom row (second to fourth <li>) */
+#queue-list li:nth-child(n+2) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  font-size: 60px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  position: relative;
+  height: 250px;
+  margin-top: -35px; /* Optional: Negative margin to bring items closer */
+}
+
+/* Use ::before to color the top half of the card */
+#queue-list li:nth-child(n+2)::before {
+  content: '';
+  position: absolute;
+  top: 0; /* Position at the top */
+  left: 0;
+  right: 0;
+  height: 50%; /* Adjust height to color the top half */
+  background: linear-gradient(180deg, #181818, #282828);
+  border-radius: 10px 10px 0 0; /* Optional: round corners on the top half */
+}
+
+/* Divider for the bottom items (horizontal) */
+#queue-list li:nth-child(n+2) .divider {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ccc;
+  transform: translateY(-50%);
+}
+
+/* Styling for Start Button */
+#start-button {
+  margin: 40px;
+  z-index: 2; /* Keep the button above other elements */
+}
+
+/* Highlight class for the top queue item */
 .highlight {
-  animation: highlightAnimation 4s ease-in-out;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b); /* Gradient from pink to orange */
+  color: white; /* White text for contrast */
+  font-size: 110px; /* Increase font size to emphasize */
+  font-weight: bold; /* Bold text */
+  box-shadow: 0 8px 15px rgba(255, 75, 43, 0.7); /* Soft glowing effect around the item */
+  transform: scale(1.05); /* Slightly scale up to make the item pop */
+  transition: all 0.3s ease-in-out; /* Smooth transition for the effect */
+  position: relative; /* To ensure the box shadow does not affect the layout */
+  z-index: 2; /* Bring the item above others */
 }
 
-@keyframes highlightAnimation {
-  0% {
-    color: #333; /* Ensure text color is visible */
-    text-shadow: 0 0 10px rgba(255, 255, 0, 3); /* Glowing effect */
-    z-index: 2; /* Ensure it is above other elements */
-  }
-  100% {
-    background-color: transparent; /* Revert to transparent background */
-    color: #333; /* Revert to default text color */
-    text-shadow: none; /* Remove shadow */
-  }
+.highlight .queue-number {
+  color: white; /* Ensure the number stays white */
+  text-shadow: 0 2px 10px rgba(255, 75, 43, 0.8); /* Text shadow for glow effect */
 }
 
-/* Add some media queries to make it look good on a 50 inch TV */
-@media only screen and (min-width: 1200px) {
-  .queue-display {
-    width: 100%;
-  }
-  .title {
-    font-size: 48px;
-  }
-  #queue-list li {
-    font-size: 58px;
-  }
+.highlight .queue-counter {
+  color: white; /* Ensure the counter stays white */
+  text-shadow: 0 2px 10px rgba(255, 75, 43, 0.8); /* Counter also has text shadow */
 }
 
-@media only screen and (min-width: 1800px) {
-  .queue-display {
-    width: 100%;
-  }
-  .title {
-    font-size: 60px;
-  }
-  #queue-list li {
-    font-size: 58px;
-  }
+/* Optional: Highlight fade-out effect */
+.highlight.fade-out {
+  opacity: 0.6;
+  transform: scale(1.05);
+  box-shadow: none; /* Remove shadow for fade-out */
 }

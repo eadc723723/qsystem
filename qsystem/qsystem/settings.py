@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-t&wln7&2!bhfc#!&gy!l$y$15rqn&fg(_l2^px(pum(1-9$xgz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['qsadcdriving.pythonanywhere.com']
 
 
 # Application definition
@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'app',
 ]
 
+SESSION_COOKIE_AGE = 10800
+
 CELERY_BEAT_SCHEDULE = {
     'reset-counters-every-day': {
         'task': 'app.tasks.reset_counters',  # Replace 'queue' with your app name
@@ -53,7 +55,7 @@ CELERY_BEAT_SCHEDULE = {
 
 AUTHENTICATION_BACKENDS = [
     'app.backends.UsernameOnlyBackend',
-    'django.contrib.auth.backends.ModelBackend',  
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -127,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Kuala_Lumpur' 
+TIME_ZONE = 'Asia/Kuala_Lumpur'
 
 USE_I18N = True
 

@@ -3,7 +3,16 @@
   <div class="box has-text-centered">
     <p class="title">Your queue number</p>
     <p class="title is-1">{{ queue_number.number }}</p>
-    <p class="subtitle">For the activity: {{ queue_number.activity.name }}</p>
+    <p class="subtitle">For activity: {{ queue_number.activity.name }}</p>
+  </div>
+  <div class="section has-text-centered">
+  {% if can_issue_new %}
+    <form action="{% url 'reset_queue_number' %}" method="post">
+        {% csrf_token %}
+        <button class="button" type="submit">Request new number</button>
+    </form>
+  {% endif %}
   </div>
 </div>
+
 {% endblock %}

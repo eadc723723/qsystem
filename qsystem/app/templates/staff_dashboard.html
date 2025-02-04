@@ -53,7 +53,7 @@
           <td>{{ queue_number.number }}</td>
           <td class="status">{{ queue_number.get_status_display }}</td>
           <td>
-            <button class="button is-warning recall-btn" data-id="{{ queue_number.id }}">Reinforce Call</button>
+            <button class="button is-warning recall-btn" data-id="{{ queue_number.id }}">Call Again</button>
           </td>
         </tr>
         {% empty %}
@@ -64,6 +64,13 @@
       </tbody>
     </table>
   </div>
+  <style>
+      button {
+          margin-right: 20px; /* adjust as needed */
+        }
+
+
+  </style>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -111,7 +118,7 @@
             actionsCell.appendChild(createButton("is-info call-btn", "Call", queueNumber.id, queueNumber.status !== "issued"));
             actionsCell.appendChild(createButton("is-danger cancel-btn", "Cancel", queueNumber.id, queueNumber.status !== "issued"));
           } else {
-            actionsCell.appendChild(createButton("is-warning recall-btn", "Reinforce Call", queueNumber.id, false));
+            actionsCell.appendChild(createButton("is-warning recall-btn", "Call Again", queueNumber.id, false));
           }
 
           row.appendChild(actionsCell);
@@ -130,13 +137,14 @@
           const queueNumberId = button.getAttribute("data-id");
 
           if (action) {
+            const counterName = "{{ counter.name }}";
             fetch('{% url "update_queue_status" %}', {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": "{{ csrf_token }}",
               },
-              body: JSON.stringify({ action: action, queue_number_id: queueNumberId }),
+              body: JSON.stringify({ action: action, queue_number_id: queueNumberId, counter_name: counterName }),
             })
               .then((response) => response.json())
               .then((data) => {
